@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Food Duel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ============ 1. DESIGN TOKENS (style matches "Planetární zdravá strava") ============ */
+    :root {
+      --bg: #214e3c;
+      /* page: deep green */
+      --panel: #19402f;
+      /* dark panel behind the buttons */
+      --cream: #f1ece0;
+      /* cards and round buttons */
+      --cream-dark: #e4dfd0;
+      --ink: #23302a;
+      /* text on cream */
+      --text: #ffffff;
+      /* text on green */
+      --muted: #b9cdbf;
+      --yellow: #f7c924;
+      /* accent: selected state, main button, highlights */
+      --good: #5f9b52;
+      --bad: #c4574a;
+      --radius: 18px;
+      --font-title: "Archivo Black", Impact, "Arial Black", sans-serif;
+      --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      color-scheme: dark;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* ============ 2. LAYOUT ============ */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+      text-align: center;
+      position: relative;
+    }
+
+    h1 {
+      font-family: var(--font-title);
+      text-transform: uppercase;
+      letter-spacing: .01em;
+      font-size: clamp(2rem, 6.5vw, 4.4rem);
+      line-height: 1.05;
+      margin: 28px 0 10px;
+    }
+
+    .subtitle {
+      font-size: clamp(.95rem, 2vw, 1.2rem);
+      margin: 0;
+    }
+
+    .subtitle b {
+      color: var(--yellow);
+      font-weight: 700;
+    }
+
+    .lang {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .lang button {
+      font: 700 .75rem var(--font-body);
+      padding: 7px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      border: 2px solid var(--muted);
+      background: transparent;
+      color: var(--text);
+    }
+
+    .lang button.on {
+      background: var(--yellow);
+      border-color: var(--yellow);
+      color: var(--ink);
+    }
+
+    /* scheme from the sketch: [card A] [panel with choices] [card B] */
+    .arena {
+      display: grid;
+      grid-template-columns: 1fr minmax(230px, 280px) 1fr;
+      gap: 20px;
+      margin-top: 36px;
+      align-items: start;
+      text-align: left;
+    }
+
+    @media (max-width: 800px) {
+      .arena {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        order: 3;
+      }
+    }
+
+    .food {
+      background: var(--cream);
+      color: var(--ink);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .food .pic {
+      height: 170px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--cream-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+    }
+
+    .food .pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .food h2 {
+      margin: 14px 0 6px;
+      font-size: 1.2rem;
+    }
+
+    .food p {
+      margin: 0;
+      line-height: 1.5;
+      font-size: .95rem;
+      color: #4d5a52;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stats {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: .85rem;
+    }
+
+    .stats b {
+      color: var(--yellow);
+    }
+
+    .hint {
+      margin: 0;
+      font-size: .8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .row-label {
+      font-size: .8rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    .pick {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: transform .1s;
+    }
+
+    .pick:hover:not(:disabled) {
+      transform: scale(1.08);
+    }
+
+    .pick.selected {
+      background: var(--yellow);
+    }
+
+    .pick.correct {
+      background: var(--good);
+      color: #fff;
+    }
+
+    .pick.wrong {
+      background: var(--bad);
+      color: #fff;
+    }
+
+    .pick.answer {
+      border-color: var(--yellow);
+    }
+
+    /* ring around the right answer */
+    .pick:disabled {
+      cursor: default;
+    }
+
+    .main-btn {
+      width: 100%;
+      padding: 13px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--yellow);
+      color: var(--ink);
+      font: 700 .95rem var(--font-body);
+      cursor: pointer;
+    }
+
+    .main-btn:disabled {
+      opacity: .4;
+      cursor: default;
+    }
+
+    #feedback {
+      min-height: 1.3em;
+      font-weight: 700;
+      font-size: .95rem;
+      text-align: center;
+    }
+
+    /* explanation pop-up */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 30, 22, .7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 10;
+    }
+
+    .modal {
+      background: var(--cream);
+      color: var(--ink);
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 520px;
+      width: 100%;
+      text-align: left;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .4);
+    }
+
+    .modal h3 {
+      margin: 0 0 10px;
+      font-family: var(--font-title);
+      font-size: 1.4rem;
+    }
+
+    .modal p {
+      margin: 0 0 20px;
+      line-height: 1.6;
+    }
+
+    .loader {
+      margin-top: 32px;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .end {
+      padding: 50px 10px;
+    }
+
+    .end .main-btn {
+      max-width: 260px;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <div class="lang">
+      <button data-lang="en">EN</button>
+      <button data-lang="cs">CZ</button>
+    </div>
+    <h1 data-i18n="title"></h1>
+    <p class="subtitle" data-i18n-html="subtitle"></p>
+
+    <div id="game"></div>
+
+    <div class="loader"><span data-i18n="loader"></span> <input type="file" id="csvFile" accept=".csv"></div>
+  </main>
+
+  <script>
+    /* =====================================================================
+       3. DATABASE – edit here or load your own .csv with the button at the bottom.
+       Columns:
+         name_a, image_a, text_a   -> left item (image = URL / path to a picture, OR an emoji)
+         name_b, image_b, text_b   -> right item
+         name_a_cs, text_a_cs, name_b_cs, text_b_cs  -> optional Czech versions (English is used if empty)
+         sustainability / health   -> which item wins: A, B or EQUAL
+         explanation (+ explanation_cs) -> text shown in the pop-up after pressing Check
+       Texts containing commas must be wrapped in "double quotes".
+       ===================================================================== */
+    const DEFAULT_CSV = `name_a,name_a_cs,image_a,text_a,text_a_cs,name_b,name_b_cs,image_b,text_b,text_b_cs,sustainability,health,explanation,explanation_cs
+Beef,Hovězí maso,🥩,"Portion 125 g: 12,435 g CO₂e (class E); 99.48 kg CO₂e per kg.","Porce 125 g (1 porce): 12 435 g CO₂e (třída E); 99,48 kg CO₂e na 1 kg. Masný chov; z dojnic 33,3.",Chicken,Kuřecí maso,🍗,"Portion 125 g: 1,234 g CO₂e (class D); 9.87 kg CO₂e per kg.","Porce 125 g (1 porce): 1 234 g CO₂e (třída D); 9,87 kg CO₂e na 1 kg. Drůbež.",B,B,"Per portion: Beef – 12,435 g CO₂e (class E), Chicken – 1,234 g (class D). Lower footprint: Chicken. For health, guidelines advise limiting red meat; chicken is leaner and has less saturated fat.",Na porci: Hovězí maso – 12 435 g CO₂e (třída E), Kuřecí maso – 1 234 g (třída D). Nižší stopu má: Kuřecí maso. Pro zdraví se doporučuje omezovat červené maso; kuřecí je libovější a má méně nasycených tuků.
+Milk,Mléko,🥛,Portion 250 g: 788 g CO₂e (class C); 3.15 kg CO₂e per kg.,"Porce 250 g (1 hrnek): 788 g CO₂e (třída C); 3,15 kg CO₂e na 1 kg.",Soy drink,Sójový nápoj,🌱,Portion 250 g: 245 g CO₂e (class B); 0.98 kg CO₂e per kg.,"Porce 250 g (1 hrnek): 245 g CO₂e (třída B); 0,98 kg CO₂e na 1 kg.",B,EQUAL,"Per portion: Milk – 788 g CO₂e (class C), Soy drink – 245 g (class B). Lower footprint: Soy drink. For health they are about equal: milk brings calcium and protein, and fortified soy drinks provide similar nutrients.","Na porci: Mléko – 788 g CO₂e (třída C), Sójový nápoj – 245 g (třída B). Nižší stopu má: Sójový nápoj. Pro zdraví jsou zhruba stejné: mléko dodává vápník a bílkoviny, obohacený sójový nápoj podobné živiny."
+Cheese (Edam),Sýr (eidam),🧀,Portion 30 g: 716 g CO₂e (class C); 23.88 kg CO₂e per kg.,"Porce 30 g (2 plátky): 716 g CO₂e (třída C); 23,88 kg CO₂e na 1 kg.",Tofu,Tofu,🟨,Portion 100 g: 316 g CO₂e (class B); 3.16 kg CO₂e per kg.,"Porce 100 g (1/2 balení): 316 g CO₂e (třída B); 3,16 kg CO₂e na 1 kg.",B,B,"Per portion: Cheese (Edam) – 716 g CO₂e (class C), Tofu – 316 g (class B). Lower footprint: Tofu. For health, tofu gives protein with less saturated fat and salt than cheese.",Na porci: Sýr (eidam) – 716 g CO₂e (třída C), Tofu – 316 g (třída B). Nižší stopu má: Tofu. Pro zdraví tofu dodává bílkoviny s menším množstvím nasycených tuků a soli než sýr.
+Rice (dry),Rýže (suchá),🍚,Portion 75 g: 334 g CO₂e (class B); 4.45 kg CO₂e per kg.,"Porce 75 g (1 porce): 334 g CO₂e (třída B); 4,45 kg CO₂e na 1 kg. Metan z rýžových polí.",Pearl barley (dry),Kroupy (suché),🌾,Portion 75 g: 89 g CO₂e (class A); 1.18 kg CO₂e per kg.,"Porce 75 g (1 porce): 89 g CO₂e (třída A); 1,18 kg CO₂e na 1 kg. Ječmen.",B,EQUAL,"Per portion: Rice (dry) – 334 g CO₂e (class B), Pearl barley (dry) – 89 g (class A). Lower footprint: Pearl barley (dry). For health they are about equal: both are starchy staples, and barley has only a little more fibre.",Na porci: Rýže (suchá) – 334 g CO₂e (třída B), Kroupy (suché) – 89 g (třída A). Nižší stopu má: Kroupy (suché). Pro zdraví jsou zhruba stejné: obojí jsou škrobové přílohy a kroupy mají jen o něco více vlákniny.
+Potatoes,Brambory,🥔,Portion 200 g: 92 g CO₂e (class A); 0.46 kg CO₂e per kg.,"Porce 200 g (3–4 brambory): 92 g CO₂e (třída A); 0,46 kg CO₂e na 1 kg.",Frozen chips,Mražené hranolky,🍟,Portion 150 g: 225 g CO₂e (class B); 1.50 kg CO₂e per kg. Value is an estimate.,"Porce 150 g (1 porce): 225 g CO₂e (třída B); 1,50 kg CO₂e na 1 kg. Brambory + olej + zpracování + mražení. Hodnota je odhad.",A,A,"Per portion: Potatoes – 92 g CO₂e (class A), Frozen chips – 225 g (class B). Lower footprint: Potatoes. The value for Frozen chips is an estimate. For health, potatoes are filling and low in fat, while frozen chips add oil and salt.","Na porci: Brambory – 92 g CO₂e (třída A), Mražené hranolky – 225 g (třída B). Nižší stopu má: Brambory. Hodnota pro Mražené hranolky je odhad. Pro zdraví jsou brambory zasytí a mají málo tuku, zatímco mražené hranolky přidávají olej a sůl."
+Apple,Jablko,🍎,Portion 150 g: 65 g CO₂e (class A); 0.43 kg CO₂e per kg.,"Porce 150 g (1 jablko): 65 g CO₂e (třída A); 0,43 kg CO₂e na 1 kg.",Banana,Banán,🍌,Portion 120 g: 103 g CO₂e (class A); 0.86 kg CO₂e per kg.,"Porce 120 g (1 banán): 103 g CO₂e (třída A); 0,86 kg CO₂e na 1 kg. Loď; jiná studie (Svanes 2013) 1,37.",EQUAL,EQUAL,"Per portion: Apple – 65 g CO₂e (class A), Banana – 103 g (class A). Both are in the same class, so the footprint counts as equal. For health they are equal: both are fruit with fibre and vitamins.","Na porci: Jablko – 65 g CO₂e (třída A), Banán – 103 g (třída A). Obě položky jsou ve stejné třídě, takže stopa se počítá jako stejná. Pro zdraví jsou stejné: obojí je ovoce s vlákninou a vitaminy."
+"Strawberries, flown in (winter)",Jahody – letecky (zima),🍓,"Portion 80 g: 1,026 g CO₂e (class D); 12.83 kg CO₂e per kg.","Porce 80 g (1 hrst): 1 026 g CO₂e (třída D); 12,83 kg CO₂e na 1 kg. Bobuloviny 1,53 + 10 000 km letecky × 1,13 kg CO2e/t·km.",Apple,Jablko,🍎,Portion 150 g: 65 g CO₂e (class A); 0.43 kg CO₂e per kg.,"Porce 150 g (1 jablko): 65 g CO₂e (třída A); 0,43 kg CO₂e na 1 kg.",B,EQUAL,"Per portion: Strawberries, flown in (winter) – 1,026 g CO₂e (class D), Apple – 65 g (class A). Lower footprint: Apple. For health they are equal: both are fruit rich in vitamins and fibre. The difference is only in how far the fruit travelled.","Na porci: Jahody – letecky (zima) – 1 026 g CO₂e (třída D), Jablko – 65 g (třída A). Nižší stopu má: Jablko. Pro zdraví jsou stejné: obojí je ovoce bohaté na vitaminy a vlákninu. Rozdíl je jen v tom, jak daleko ovoce cestovalo."
+Dark chocolate,Čokoláda (hořká),🍫,"Portion 25 g: 1,166 g CO₂e (class D); 46.65 kg CO₂e per kg.","Porce 25 g (4 čtverečky): 1 166 g CO₂e (třída D); 46,65 kg CO₂e na 1 kg. Pěstování kakaa vede ke kácení lesů.",Nuts,Ořechy,🥜,Portion 30 g: 13 g CO₂e (class A); 0.43 kg CO₂e per kg.,"Porce 30 g (1 hrst): 13 g CO₂e (třída A); 0,43 kg CO₂e na 1 kg. Nízká stopa (stromy váží uhlík); mandle hodně vody.",B,B,"Per portion: Dark chocolate – 1,166 g CO₂e (class D), Nuts – 13 g (class A). Lower footprint: Nuts. For health, nuts offer unsaturated fats, protein and fibre, while dark chocolate is energy-dense and contains sugar.","Na porci: Čokoláda (hořká) – 1 166 g CO₂e (třída D), Ořechy – 13 g (třída A). Nižší stopu má: Ořechy. Pro zdraví ořechy nabízejí nenasycené tuky, bílkoviny a vlákninu, zatímco hořká čokoláda je energeticky bohatá a obsahuje cukr."
+White bread roll,Bílé pečivo,🥖,Portion 50 g: 79 g CO₂e (class A); 1.57 kg CO₂e per kg.,"Porce 50 g (1 rohlík): 79 g CO₂e (třída A); 1,57 kg CO₂e na 1 kg. Pšenice.",Wholegrain bread,Celozrnný chléb,🍞,Portion 60 g: 94 g CO₂e (class A); 1.57 kg CO₂e per kg.,"Porce 60 g (2 krajíce): 94 g CO₂e (třída A); 1,57 kg CO₂e na 1 kg. Pšenice a žito.",EQUAL,B,"Per portion: White bread roll – 79 g CO₂e (class A), Wholegrain bread – 94 g (class A). Both are in the same class, so the footprint counts as equal. For health, wholegrain bread keeps more fibre and minerals than white bread.","Na porci: Bílé pečivo – 79 g CO₂e (třída A), Celozrnný chléb – 94 g (třída A). Obě položky jsou ve stejné třídě, takže stopa se počítá jako stejná. Pro zdraví si celozrnný chléb zachovává více vlákniny a minerálů než bílé pečivo."
+Eggs,Vejce,🥚,Portion 120 g: 560 g CO₂e (class C); 4.67 kg CO₂e per kg.,"Porce 120 g (2 vejce): 560 g CO₂e (třída C); 4,67 kg CO₂e na 1 kg.","Legumes (dry lentils, beans)",Luštěniny (suché),🫘,Portion 60 g: 107 g CO₂e (class A); 1.79 kg CO₂e per kg.,"Porce 60 g (≈ 150 g uvařených): 107 g CO₂e (třída A); 1,79 kg CO₂e na 1 kg. Ostatní luštěniny; hrách 0,98.",B,EQUAL,"Per portion: Eggs – 560 g CO₂e (class C), Legumes (dry lentils, beans) – 107 g (class A). Lower footprint: Legumes (dry lentils, beans). For health they are about equal: legumes add fibre, eggs add vitamin B12.","Na porci: Vejce – 560 g CO₂e (třída C), Luštěniny (suché) – 107 g (třída A). Nižší stopu má: Luštěniny (suché). Pro zdraví jsou zhruba stejné: luštěniny dodávají vlákninu, vejce vitamin B12."
+Farmed salmon,Ryby z chovu (losos),🐟,"Portion 140 g: 1,908 g CO₂e (class D); 13.63 kg CO₂e per kg.","Porce 140 g (1 porce): 1 908 g CO₂e (třída D); 13,63 kg CO₂e na 1 kg. Malé mořské ryby a mušle výrazně méně (Hilborn 2018).",Chicken,Kuřecí maso,🍗,"Portion 125 g: 1,234 g CO₂e (class D); 9.87 kg CO₂e per kg.","Porce 125 g (1 porce): 1 234 g CO₂e (třída D); 9,87 kg CO₂e na 1 kg. Drůbež.",EQUAL,A,"Per portion: Farmed salmon – 1,908 g CO₂e (class D), Chicken – 1,234 g (class D). Both are in the same class, so the footprint counts as equal. For health, fish such as salmon provides omega-3 fatty acids, which chicken lacks.","Na porci: Ryby z chovu (losos) – 1 908 g CO₂e (třída D), Kuřecí maso – 1 234 g (třída D). Obě položky jsou ve stejné třídě, takže stopa se počítá jako stejná. Pro zdraví ryby jako losos dodávají omega-3 mastné kyseliny, které kuřecí maso neobsahuje."
+Sugary soda,Slazená limonáda,🥤,Portion 330 g: 99 g CO₂e (class A); 0.30 kg CO₂e per kg. Value is an estimate.,"Porce 330 g (1 plechovka): 99 g CO₂e (třída A); 0,30 kg CO₂e na 1 kg. Cukr + obal. Hodnota je odhad.",Tap water,Voda z kohoutku,💧,Portion 250 g: 0 g CO₂e (class A); 0.00 kg CO₂e per kg. Value is an estimate.,"Porce 250 g (1 sklenice): 0 g CO₂e (třída A); 0,00 kg CO₂e na 1 kg. Hodnota je odhad.",EQUAL,B,"Per portion: Sugary soda – 99 g CO₂e (class A), Tap water – 0 g (class A). Both are in the same class, so the footprint counts as equal. The value for Sugary soda is an estimate. The value for Tap water is an estimate. For health, water has no sugar, while a can of soda is mostly sugar.","Na porci: Slazená limonáda – 99 g CO₂e (třída A), Voda z kohoutku – 0 g (třída A). Obě položky jsou ve stejné třídě, takže stopa se počítá jako stejná. Hodnota pro Slazená limonáda je odhad. Hodnota pro Voda z kohoutku je odhad. Pro zdraví voda neobsahuje cukr, zatímco plechovka limonády je většinou cukr."
+`;
+
+    /* =====================================================================
+       4. TEXTS & SETTINGS – all visible UI text lives here (EN + CZ)
+       ===================================================================== */
+    const TEXT = {
+      en: {
+        title: "Planetary Food Duel", subtitle: "Different foods. <b>Different impacts.</b> Pick the winner of each pair.",
+        pair: "Pair", mistakes: "Mistakes", hint: "Choose left, equal or right in both rows, then press Check.",
+        planet: "Better for the planet", health: "Better for health",
+        check: "Check", gotit: "Got it", next: "Next pair", again: "Start again",
+        perfect: "Perfect! 🎉", half: "Half right 👍", none: "Not this time 😅",
+        done: "Done! 🎉", score: "You scored", loader: "Use your own database (CSV):"
+      },
+      cs: {
+        title: "Planetární potravinový souboj", subtitle: "Různé potraviny. <b>Různé dopady.</b> Vyber vítěze každého páru.",
+        pair: "Dvojice", mistakes: "Chyby", hint: "V obou řádcích vyber vlevo, stejné nebo vpravo a klikni na Zkontrolovat.",
+        planet: "Lepší pro planetu", health: "Lepší pro zdraví",
+        check: "Zkontrolovat", gotit: "Rozumím", next: "Další dvojice", again: "Začít znovu",
+        perfect: "Perfektní! 🎉", half: "Půl na půl 👍", none: "Tentokrát ne 😅",
+        done: "Hotovo! 🎉", score: "Získal(a) jsi", loader: "Vlastní databáze (CSV):"
+      },
+    };
+    // rows of choice buttons: key = CSV column with the correct answer, labelKey = entry in TEXT
+    const ROWS = [
+      { key: "sustainability", icon: "🌱", labelKey: "planet" },
+      { key: "health", icon: "❤️", labelKey: "health" },
+    ];
+    // the three answers of a row: [value, button symbol] (null symbol = the row icon, i.e. "equal")
+    const OPTIONS = [["A", "◀"], ["EQUAL", null], ["B", "▶"]];
+
+    /* =====================================================================
+       5. CSV PARSER (handles "quoted, text" and "" escaped quotes)
+       ===================================================================== */
+    function parseCSV(text) {
+      const rows = []; let row = [], cell = "", inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+          else if (c === '"') inQuotes = false;
+          else cell += c;
+        } else if (c === '"') inQuotes = true;
+        else if (c === ",") { row.push(cell); cell = ""; }
+        else if (c === "\n" || c === "\r") {
+          if (c === "\r" && text[i + 1] === "\n") i++;
+          row.push(cell); cell = ""; rows.push(row); row = [];
+        } else cell += c;
+      }
+      if (cell || row.length) { row.push(cell); rows.push(row); }
+      const [header, ...body] = rows.filter(r => r.some(x => x.trim()));
+      const names = header.map(h => h.trim());
+      return body.map(r => Object.fromEntries(names.map((n, i) => [n, (r[i] || "").trim()])));
+    }
+
+    /* =====================================================================
+       6. STATE
+       ===================================================================== */
+    let lang = (navigator.language || "en").startsWith("cs") ? "cs" : "en";
+    let currentCSV = DEFAULT_CSV;
+    let pairs = [], index = 0, score = 0, mistakes = 0;
+    let guesses = {};      // e.g. { sustainability: "A", health: "EQUAL" }
+    let checked = false;   // has Check been pressed for this pair?
+    let showExplanation = false;   // is the explanation pop-up open?
+
+    const $game = document.getElementById("game");
+    const t = key => TEXT[lang][key];
+    const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    // read a CSV field in the current language, falling back to English
+    const field = (p, name) => (lang === "cs" && p[name + "_cs"]) || p[name];
+
+    function startGame(csv) {
+      pairs = parseCSV(csv).sort(() => Math.random() - 0.5);   // shuffle
+      index = 0; score = 0; mistakes = 0;
+      goToPair(0);
+    }
+    function goToPair(i) { index = i; guesses = {}; checked = false; showExplanation = false; render(); }
+
+    /* =====================================================================
+       7. RENDERING – everything is drawn from the state above
+       ===================================================================== */
+    function pictureHTML(image, name) {
+      const isLink = /^(https?:|\/|\.\/|\.\.\/)|\.(jpe?g|png|webp|gif|svg)$/i.test(image);
+      return isLink ? `<img src="${esc(image)}" alt="${esc(name)}">` : esc(image);   // otherwise it is an emoji
+    }
+
+    function foodCardHTML(p, side) {            // side = "a" or "b"
+      const name = field(p, "name_" + side);
+      return `<section class="food">
+    <div class="pic">${pictureHTML(p["image_" + side], name)}</div>
+    <h2>${esc(name)}</h2>
+    <p>${esc(field(p, "text_" + side))}</p>
+  </section>`;
+    }
+
+    function rowHTML(row, p) {
+      const buttons = OPTIONS.map(([value, symbol]) => {
+        const cls = ["pick"];
+        if (!checked && guesses[row.key] === value) cls.push("selected");
+        if (checked) {
+          if (value === p[row.key]) cls.push("answer");
+          if (guesses[row.key] === value) cls.push(value === p[row.key] ? "correct" : "wrong");
+        }
+        return `<button class="${cls.join(" ")}" data-row="${row.key}" data-value="${value}" ${checked ? "disabled" : ""}>${symbol ?? row.icon}</button>`;
+      }).join("");
+      return `<div><div class="row">${buttons}</div><div class="row-label">${t(row.labelKey)}</div></div>`;
+    }
+
+    function feedbackText(p) {
+      const right = ROWS.filter(r => guesses[r.key] === p[r.key]).length;
+      return right === ROWS.length ? t("perfect") : right === 0 ? t("none") : t("half");
+    }
+
+    function render() {
+      if (index >= pairs.length) return renderEnd();
+      const p = pairs[index];
+      const ready = ROWS.every(r => guesses[r.key]);
+      $game.innerHTML = `<div class="arena">
+    ${foodCardHTML(p, "a")}
+    <div class="panel">
+      <div class="stats"><span>${t("pair")} <b>${index + 1}</b> / <b>${pairs.length}</b></span><span>${t("mistakes")} <b>${mistakes}</b></span></div>
+      <p class="hint">${t("hint")}</p>
+      ${ROWS.map(r => rowHTML(r, p)).join("")}
+      <button class="main-btn" id="mainBtn" ${ready || checked ? "" : "disabled"}>${checked ? t("next") : t("check")}</button>
+      <div id="feedback">${checked ? feedbackText(p) : ""}</div>
+    </div>
+    ${foodCardHTML(p, "b")}
+  </div>
+  ${showExplanation ? modalHTML(p) : ""}`;
+    }
+
+    function modalHTML(p) {
+      const text = field(p, "explanation");
+      if (!text) return "";                      // no explanation in the CSV -> no pop-up
+      return `<div class="backdrop" id="backdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3>${feedbackText(p)}</h3>
+      <p>${esc(text)}</p>
+      <button class="main-btn" id="closeModal">${t("gotit")}</button>
+    </div>
+  </div>`;
+    }
+
+    function renderEnd() {
+      $game.innerHTML = `<div class="end"><h2>${t("done")}</h2>
+    <p>${t("score")} <b>${score} / ${pairs.length * ROWS.length}</b></p>
+    <button class="main-btn" id="again">${t("again")}</button></div>`;
+    }
+
+    function applyLang() {
+      document.documentElement.lang = lang;
+      document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t(el.dataset.i18n));
+      document.querySelectorAll("[data-i18n-html]").forEach(el => el.innerHTML = t(el.dataset.i18nHtml));
+      document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
+      render();
+    }
+
+    /* =====================================================================
+       8. EVENTS
+       ===================================================================== */
+    $game.addEventListener("click", e => {
+      const pick = e.target.closest(".pick");
+      if (pick && !checked) { guesses[pick.dataset.row] = pick.dataset.value; return render(); }
+      if (e.target.closest("#mainBtn")) {
+        if (checked) return goToPair(index + 1);
+        const p = pairs[index];
+        checked = true; showExplanation = true;
+        ROWS.forEach(r => guesses[r.key] === p[r.key] ? score++ : mistakes++);
+        return render();
+      }
+      if (e.target.closest("#closeModal") || e.target.id === "backdrop") { showExplanation = false; return render(); }
+      if (e.target.closest("#again")) startGame(currentCSV);
+    });
+
+    document.addEventListener("keydown", e => {          // Esc closes the pop-up
+      if (e.key === "Escape" && showExplanation) { showExplanation = false; render(); }
+    });
+
+    document.querySelectorAll(".lang button").forEach(b =>
+      b.addEventListener("click", () => { lang = b.dataset.lang; applyLang(); }));
+
+    document.getElementById("csvFile").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { currentCSV = reader.result; startGame(currentCSV); };
+      reader.readAsText(file);
+    });
+
+    startGame(currentCSV);
+    applyLang();
+  </script>
+</body>
+
+</html>

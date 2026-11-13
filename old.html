@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Food Duel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ============ 1. DESIGN TOKENS (style matches "Planetární zdravá strava") ============ */
+    :root {
+      --bg: #214e3c;
+      /* page: deep green */
+      --panel: #19402f;
+      /* dark panel behind the buttons */
+      --cream: #f1ece0;
+      /* cards and round buttons */
+      --cream-dark: #e4dfd0;
+      --ink: #23302a;
+      /* text on cream */
+      --text: #ffffff;
+      /* text on green */
+      --muted: #b9cdbf;
+      --yellow: #f7c924;
+      /* accent: selected state, main button, highlights */
+      --good: #5f9b52;
+      --bad: #c4574a;
+      --radius: 18px;
+      --font-title: "Archivo Black", Impact, "Arial Black", sans-serif;
+      --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      color-scheme: dark;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* ============ 2. LAYOUT ============ */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+    }
+
+    header {
+      margin: 0 auto;
+      padding: 24px 15px 0px;
+      height: 20vh;
+      text-align: center;
+      position: relative;
+    }
+
+    main {
+      margin: 0 auto;
+      padding: 0px 16px;
+      text-align: center;
+      position: relative;
+    }
+
+    h1 {
+      font-family: var(--font-title);
+      text-transform: uppercase;
+      letter-spacing: .01em;
+      font-size: clamp(2rem, 6.5vw, 4.4rem);
+      line-height: 1.05;
+      margin: 28px 0 10px;
+    }
+
+    .subtitle {
+      font-size: clamp(.95rem, 2vw, 1.2rem);
+      margin: 0;
+    }
+
+    .subtitle b {
+      color: var(--yellow);
+      font-weight: 700;
+    }
+
+    .lang {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .lang button {
+      font: 700 .75rem var(--font-body);
+      padding: 7px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      border: 2px solid var(--muted);
+      background: transparent;
+      color: var(--text);
+    }
+
+    .lang button.on {
+      background: var(--yellow);
+      border-color: var(--yellow);
+      color: var(--ink);
+    }
+
+    /* scheme from the sketch: [card A] [panel with choices] [card B] */
+    .arena {
+      display: grid;
+      grid-template-columns: 1fr minmax(230px, 280px) 1fr;
+      gap: 20px;
+      align-items: start;
+      text-align: left;
+      width: 80%;
+      margin: 36px auto;
+    }
+
+    @media (max-width: 800px) {
+      .arena {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        order: 3;
+      }
+    }
+
+    .food {
+      height: 60vh;
+      background: var(--cream);
+      color: var(--ink);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .food .pic {
+      height: 30vh;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--cream-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+    }
+
+    .food .pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .food h2 {
+      margin: 14px 0 6px;
+      font-size: 1.2rem;
+    }
+
+    .food p {
+      margin: 0;
+      line-height: 1.5;
+      font-size: .95rem;
+      color: #4d5a52;
+    }
+
+    .panel {
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stats {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: .85rem;
+    }
+
+    .stats b {
+      color: var(--yellow);
+    }
+
+    .hint {
+      margin: 0;
+      font-size: .8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .row-label {
+      font-size: .8rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 6px;
+    }
+
+    .pick {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      background: var(--cream);
+      color: var(--ink);
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: transform .1s;
+    }
+
+    .pick:hover:not(:disabled) {
+      transform: scale(1.08);
+    }
+
+    .pick.selected {
+      background: var(--yellow);
+    }
+
+    .pick.correct {
+      background: var(--good);
+      color: #fff;
+    }
+
+    .pick.wrong {
+      background: var(--bad);
+      color: #fff;
+    }
+
+    .pick.answer {
+      border-color: var(--yellow);
+    }
+
+    /* ring around the right answer */
+    .pick:disabled {
+      cursor: default;
+    }
+
+    .main-btn {
+      width: 100%;
+      padding: 13px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--yellow);
+      color: var(--ink);
+      font: 700 .95rem var(--font-body);
+      cursor: pointer;
+    }
+
+    .main-btn:disabled {
+      opacity: .4;
+      cursor: default;
+    }
+
+    #feedback {
+      min-height: 1.3em;
+      font-weight: 700;
+      font-size: .95rem;
+      text-align: center;
+    }
+
+    .loader {
+      margin-top: 32px;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .end {
+      padding: 50px 10px;
+    }
+
+    .end .main-btn {
+      max-width: 260px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="lang">
+      <button data-lang="en">EN</button>
+      <button data-lang="cs">CZ</button>
+    </div>
+    <h1 data-i18n="title"></h1>
+    <p class="subtitle" data-i18n-html="subtitle"></p>
+  </header>
+  <main>
+    
+
+    <div id="game"></div>
+
+    
+  </main>
+
+  <script>
+    /* =====================================================================
+       3. DATABASE – edit here or load your own .csv with the button at the bottom.
+       Columns:
+         name_a, image_a, text_a   -> left item (image = URL / path to a picture, OR an emoji)
+         name_b, image_b, text_b   -> right item
+         name_a_cs, text_a_cs, name_b_cs, text_b_cs  -> optional Czech versions (English is used if empty)
+         sustainability / health   -> which item wins: A, B or EQUAL
+       Texts containing commas must be wrapped in "double quotes".
+       ===================================================================== */
+    const DEFAULT_CSV = `name_a,name_a_cs,image_a,text_a,text_a_cs,name_b,name_b_cs,image_b,text_b,text_b_cs,sustainability,health
+Beef steak,Hovězí steak,🥩,"Beef has one of the highest carbon and land footprints of any food.",Hovězí má jednu z nejvyšších uhlíkových stop a nároků na půdu.,Chicken breast,Kuřecí prsa,🍗,"Poultry needs far less feed, land and water per kilogram of protein.","Drůbež potřebuje na kilogram bílkovin mnohem méně krmiva, půdy a vody.",B,EQUAL
+Cow's milk,Kravské mléko,🥛,"Dairy cows emit methane and need a lot of land and feed.",Krávy produkují metan a potřebují hodně půdy a krmiva.,Oat drink,Ovesný nápoj,🌾,"Oats have a low footprint; fortified versions are comparable in nutrients.",Oves má nízkou stopu; obohacené nápoje mají podobné živiny.,B,EQUAL
+Cheddar cheese,Čedar,🧀,"Rich in protein and calcium, but high in saturated fat and salt.","Bohatý na bílkoviny a vápník, ale i na nasycené tuky a sůl.",Tofu,Tofu,🟨,"Plant protein with little saturated fat and a small footprint.",Rostlinná bílkovina s málo nasycenými tuky a malou stopou.,B,B
+White rice,Bílá rýže,🍚,"Refined grain with little fibre. Rice paddies emit methane.",Rafinovaná obilnina s málem vlákniny. Rýžová pole uvolňují metan.,Brown rice,Hnědá rýže,🍘,"Whole grain with more fibre and minerals. Similar growing footprint.","Celozrnná, s více vlákniny a minerálů. Podobná stopa pěstování.",EQUAL,B
+Local apple,Místní jablko,🍎,"Seasonal fruit grown nearby, stores well, rich in fibre and vitamin C.","Sezónní ovoce odnedaleka, dobře se skladuje, hodně vlákniny a vitaminu C.",Avocado,Avokádo,🥑,"Healthy fats and fibre, but needs a lot of water and is shipped far.","Zdravé tuky a vláknina, ale spotřebuje hodně vody a putuje daleko.",A,EQUAL
+Butter,Máslo,🧈,"Animal fat with a high carbon footprint and lots of saturated fat.",Živočišný tuk s vysokou uhlíkovou stopou a hodně nasycených tuků.,Olive oil,Olivový olej,🫒,"Plant oil with unsaturated fats and a lower footprint.",Rostlinný olej s nenasycenými tuky a nižší stopou.,B,B
+Lentils,Čočka,🫘,"Cheap, high in protein and fibre, they even enrich the soil.","Levná, bohatá na bílkoviny a vlákninu, dokonce obohacuje půdu.",Chicken breast,Kuřecí prsa,🍗,"Good lean protein, but with a bigger footprint than pulses.","Dobrá libová bílkovina, ale s větší stopou než luštěniny.",A,EQUAL
+Boiled potatoes,Vařené brambory,🥔,"Unprocessed, filling, low footprint.","Nezpracované, zasytí, nízká stopa.",Potato chips,Bramborové lupínky,🍟,"Fried and salted, more processing and packaging.","Smažené a solené, více zpracování a obalů.",EQUAL,A
+Banana,Banán,🍌,"Natural sugar plus potassium and fibre. Shipped, but a modest footprint.","Přírodní cukr, draslík a vláknina. Dováží se, ale stopa je mírná.",Chocolate bar,Čokoládová tyčinka,🍫,"Lots of sugar and fat; cocoa and milk add to the footprint.","Hodně cukru a tuku; kakao a mléko zvyšují stopu.",A,A`;
+
+    /* =====================================================================
+       4. TEXTS & SETTINGS – all visible UI text lives here (EN + CZ)
+       ===================================================================== */
+    const TEXT = {
+      en: {
+        title: "Food Duel", subtitle: "Different foods. <b>Different impacts.</b> Pick the winner of each pair.",
+        pair: "Pair", mistakes: "Mistakes", hint: "Choose left, equal or right in both rows, then press Check.",
+        planet: "Better for the planet", health: "Better for health",
+        check: "Check", next: "Next pair", again: "Start again",
+        perfect: "Perfect! 🎉", half: "Half right 👍", none: "Not this time 😅",
+        done: "Done! 🎉", score: "You scored", loader: "Use your own database (CSV):"
+      },
+      cs: {
+        title: "Potravinový souboj", subtitle: "Různé potraviny. <b>Různé dopady.</b> Vyber vítěze každého páru.",
+        pair: "Dvojice", mistakes: "Chyby", hint: "V obou řádcích vyber vlevo, stejné nebo vpravo a klikni na Zkontrolovat.",
+        planet: "Lepší pro planetu", health: "Lepší pro zdraví",
+        check: "Zkontrolovat", next: "Další dvojice", again: "Začít znovu",
+        perfect: "Perfektní! 🎉", half: "Půl na půl 👍", none: "Tentokrát ne 😅",
+        done: "Hotovo! 🎉", score: "Získal(a) jsi", loader: "Vlastní databáze (CSV):"
+      },
+    };
+    // rows of choice buttons: key = CSV column with the correct answer, labelKey = entry in TEXT
+    const ROWS = [
+      {key: "sustainability", icon: "🌱", labelKey: "planet"},
+      {key: "health", icon: "❤️", labelKey: "health"},
+    ];
+    // the three answers of a row: [value, button symbol] (null symbol = the row icon, i.e. "equal")
+    const OPTIONS = [["A", "◀"], ["EQUAL", null], ["B", "▶"]];
+
+    /* =====================================================================
+       5. CSV PARSER (handles "quoted, text" and "" escaped quotes)
+       ===================================================================== */
+    function parseCSV(text) {
+      const rows = []; let row = [], cell = "", inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"' && text[i + 1] === '"') {cell += '"'; i++;}
+          else if (c === '"') inQuotes = false;
+          else cell += c;
+        } else if (c === '"') inQuotes = true;
+        else if (c === ",") {row.push(cell); cell = "";}
+        else if (c === "\n" || c === "\r") {
+          if (c === "\r" && text[i + 1] === "\n") i++;
+          row.push(cell); cell = ""; rows.push(row); row = [];
+        } else cell += c;
+      }
+      if (cell || row.length) {row.push(cell); rows.push(row);}
+      const [header, ...body] = rows.filter(r => r.some(x => x.trim()));
+      const names = header.map(h => h.trim());
+      return body.map(r => Object.fromEntries(names.map((n, i) => [n, (r[i] || "").trim()])));
+    }
+
+    /* =====================================================================
+       6. STATE
+       ===================================================================== */
+    let lang = (navigator.language || "en").startsWith("cs") ? "cs" : "en";
+    let currentCSV = DEFAULT_CSV;
+    let pairs = [], index = 0, score = 0, mistakes = 0;
+    let guesses = {};      // e.g. { sustainability: "A", health: "EQUAL" }
+    let checked = false;   // has Check been pressed for this pair?
+
+    const $game = document.getElementById("game");
+    const t = key => TEXT[lang][key];
+    const esc = s => s.replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+    // read a CSV field in the current language, falling back to English
+    const field = (p, name) => (lang === "cs" && p[name + "_cs"]) || p[name];
+
+    function startGame(csv) {
+      pairs = parseCSV(csv).sort(() => Math.random() - 0.5);   // shuffle
+      index = 0; score = 0; mistakes = 0;
+      goToPair(0);
+    }
+    function goToPair(i) {index = i; guesses = {}; checked = false; render();}
+
+    /* =====================================================================
+       7. RENDERING – everything is drawn from the state above
+       ===================================================================== */
+    function pictureHTML(image, name) {
+      const isLink = /^(https?:|\/|\.\/|\.\.\/)|\.(jpe?g|png|webp|gif|svg)$/i.test(image);
+      return isLink ? `<img src="${esc(image)}" alt="${esc(name)}">` : esc(image);   // otherwise it is an emoji
+    }
+
+    function foodCardHTML(p, side) {            // side = "a" or "b"
+      const name = field(p, "name_" + side);
+      return `<section class="food">
+    <div class="pic">${pictureHTML(p["image_" + side], name)}</div>
+    <h2>${esc(name)}</h2>
+    <p>${esc(field(p, "text_" + side))}</p>
+  </section>`;
+    }
+
+    function rowHTML(row, p) {
+      const buttons = OPTIONS.map(([value, symbol]) => {
+        const cls = ["pick"];
+        if (!checked && guesses[row.key] === value) cls.push("selected");
+        if (checked) {
+          if (value === p[row.key]) cls.push("answer");
+          if (guesses[row.key] === value) cls.push(value === p[row.key] ? "correct" : "wrong");
+        }
+        return `<button class="${cls.join(" ")}" data-row="${row.key}" data-value="${value}" ${checked ? "disabled" : ""}>${symbol ?? row.icon}</button>`;
+      }).join("");
+      return `<div><div class="row">${buttons}</div><div class="row-label">${t(row.labelKey)}</div></div>`;
+    }
+
+    function feedbackText(p) {
+      const right = ROWS.filter(r => guesses[r.key] === p[r.key]).length;
+      return right === ROWS.length ? t("perfect") : right === 0 ? t("none") : t("half");
+    }
+
+    function render() {
+      if (index >= pairs.length) return renderEnd();
+      const p = pairs[index];
+      const ready = ROWS.every(r => guesses[r.key]);
+      $game.innerHTML = `<div class="arena">
+    ${foodCardHTML(p, "a")}
+    <div class="panel">
+      <div class="stats"><span>${t("pair")} <b>${index + 1}</b> / <b>${pairs.length}</b></span><span>${t("mistakes")} <b>${mistakes}</b></span></div>
+      <p class="hint">${t("hint")}</p>
+      ${ROWS.map(r => rowHTML(r, p)).join("")}
+      <button class="main-btn" id="mainBtn" ${ready || checked ? "" : "disabled"}>${checked ? t("next") : t("check")}</button>
+      <div id="feedback">${checked ? feedbackText(p) : ""}</div>
+    </div>
+    ${foodCardHTML(p, "b")}
+  </div>`;
+    }
+
+    function renderEnd() {
+      $game.innerHTML = `<div class="end"><h2>${t("done")}</h2>
+    <p>${t("score")} <b>${score} / ${pairs.length * ROWS.length}</b></p>
+    <button class="main-btn" id="again">${t("again")}</button></div>`;
+    }
+
+    function applyLang() {
+      document.documentElement.lang = lang;
+      document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t(el.dataset.i18n));
+      document.querySelectorAll("[data-i18n-html]").forEach(el => el.innerHTML = t(el.dataset.i18nHtml));
+      document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
+      render();
+    }
+
+    /* =====================================================================
+       8. EVENTS
+       ===================================================================== */
+    $game.addEventListener("click", e => {
+      const pick = e.target.closest(".pick");
+      if (pick && !checked) {guesses[pick.dataset.row] = pick.dataset.value; return render();}
+      if (e.target.closest("#mainBtn")) {
+        if (checked) return goToPair(index + 1);
+        const p = pairs[index];
+        checked = true;
+        ROWS.forEach(r => guesses[r.key] === p[r.key] ? score++ : mistakes++);
+        return render();
+      }
+      if (e.target.closest("#again")) startGame(currentCSV);
+    });
+
+    document.querySelectorAll(".lang button").forEach(b =>
+      b.addEventListener("click", () => {lang = b.dataset.lang; applyLang();}));
+
+    startGame(currentCSV);
+    applyLang();
+  </script>
+</body>
+
+</html>
