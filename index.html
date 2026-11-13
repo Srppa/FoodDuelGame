@@ -237,9 +237,19 @@
       color: #fff;
     }
 
-    .pick.answer {
-      border-color: var(--yellow);
-    }
+    @keyframes borderBlink {
+  0%, 100% {
+    border-color: var(--yellow);
+  }
+  50% {
+    border-color: transparent; /* Makes the border disappear halfway through */
+  }
+}
+
+.pick.answer {
+  border: 4px solid var(--yellow); /* Ensure a border width is set so it's visible */
+  animation: borderBlink 2.5s infinite; /* 1 second duration, loops forever */
+}
 
     /* ring around the right answer */
     .pick:disabled {
@@ -324,6 +334,14 @@
     .end .main-btn {
       max-width: 260px;
     }
+
+    footer{
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      bottom: 20px;
+    }
+
   </style>
 </head>
 
