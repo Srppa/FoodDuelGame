@@ -52,17 +52,18 @@
 
     .info-btn {
       position: absolute;
-      top: 12px;
-      left: 16px;
-      width: 36px;
-      height: 36px;
+      top: 20px;
+      left: 20px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 2px solid var(--muted);
       background: transparent;
-      color: var(--text);
-      font: 700 1rem var(--font-body);
+      color: #fff;
+      font: 700 20px "Archivo Black", Impact, sans-serif;
       cursor: pointer;
     }
+    
 
     .info-btn:hover {
       background: var(--yellow);
@@ -412,23 +413,23 @@
   <footer>
     <p class="source" data-i18n="source"></p>
   </footer>
-<div class="backdrop" id="infoBackdrop" hidden>
-  <div class="modal info-modal" role="dialog" aria-modal="true">
-    <button class="info-close" id="infoClose" aria-label="Close">×</button>
+  <div class="backdrop" id="infoBackdrop" hidden>
+    <div class="modal info-modal" role="dialog" aria-modal="true">
+      <button class="info-close" id="infoClose" aria-label="Close">×</button>
 
-    <!-- ENGLISH TUTORIAL: replace everything inside with your own HTML -->
-    <div data-info-lang="en">
-      <h3>How to play</h3>
-      <p>Your English tutorial text goes here.</p>
-    </div>
+      <!-- ENGLISH TUTORIAL: replace everything inside with your own HTML -->
+      <div data-info-lang="en">
+        <h3>How to play</h3>
+        <p>Your English tutorial text goes here.</p>
+      </div>
 
-    <!-- CZECH TUTORIAL: replace everything inside with your own HTML -->
-    <div data-info-lang="cs">
-      <h3>Jak hrát</h3>
-      <p>Sem patří český text návodu.</p>
+      <!-- CZECH TUTORIAL: replace everything inside with your own HTML -->
+      <div data-info-lang="cs">
+        <h3>Jak hrát</h3>
+        <p>Sem patří český text návodu.</p>
+      </div>
     </div>
   </div>
-</div>
   <script>
     /* =====================================================================
        3. DATABASE – edit here or load your own .csv with the button at the bottom.
@@ -479,8 +480,8 @@ Sugary soda,Slazená limonáda,🥤,Portion: 330 ml. Sweetened soft drink in a c
     };
     // rows of choice buttons: key = CSV column with the correct answer, labelKey = entry in TEXT
     const ROWS = [
-      {key: "sustainability", icon: "🌱", labelKey: "planet"},
-      {key: "health", icon: "❤️", labelKey: "health"},
+      { key: "sustainability", icon: "🌱", labelKey: "planet" },
+      { key: "health", icon: "❤️", labelKey: "health" },
     ];
     // the three answers of a row: [value, button symbol] (null symbol = the row icon, i.e. "equal")
     const OPTIONS = [["A", "◀"], ["EQUAL", null], ["B", "▶"]];
@@ -493,17 +494,17 @@ Sugary soda,Slazená limonáda,🥤,Portion: 330 ml. Sweetened soft drink in a c
       for (let i = 0; i < text.length; i++) {
         const c = text[i];
         if (inQuotes) {
-          if (c === '"' && text[i + 1] === '"') {cell += '"'; i++;}
+          if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
           else if (c === '"') inQuotes = false;
           else cell += c;
         } else if (c === '"') inQuotes = true;
-        else if (c === ",") {row.push(cell); cell = "";}
+        else if (c === ",") { row.push(cell); cell = ""; }
         else if (c === "\n" || c === "\r") {
           if (c === "\r" && text[i + 1] === "\n") i++;
           row.push(cell); cell = ""; rows.push(row); row = [];
         } else cell += c;
       }
-      if (cell || row.length) {row.push(cell); rows.push(row);}
+      if (cell || row.length) { row.push(cell); rows.push(row); }
       const [header, ...body] = rows.filter(r => r.some(x => x.trim()));
       const names = header.map(h => h.trim());
       return body.map(r => Object.fromEntries(names.map((n, i) => [n, (r[i] || "").trim()])));
@@ -521,7 +522,7 @@ Sugary soda,Slazená limonáda,🥤,Portion: 330 ml. Sweetened soft drink in a c
 
     const $game = document.getElementById("game");
     const t = key => TEXT[lang][key];
-    const esc = s => s.replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+    const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
     // read a CSV field in the current language, falling back to English
     const field = (p, name) => (lang === "cs" && p[name + "_cs"]) || p[name];
 
@@ -530,7 +531,7 @@ Sugary soda,Slazená limonáda,🥤,Portion: 330 ml. Sweetened soft drink in a c
       index = 0; score = 0; mistakes = 0;
       goToPair(0);
     }
-    function goToPair(i) {index = i; guesses = {}; checked = false; showExplanation = false; render();}
+    function goToPair(i) { index = i; guesses = {}; checked = false; showExplanation = false; render(); }
 
     /* =====================================================================
        7. RENDERING – everything is drawn from the state above
@@ -617,7 +618,7 @@ Sugary soda,Slazená limonáda,🥤,Portion: 330 ml. Sweetened soft drink in a c
        ===================================================================== */
     $game.addEventListener("click", e => {
       const pick = e.target.closest(".pick");
-      if (pick && !checked) {guesses[pick.dataset.row] = pick.dataset.value; return render();}
+      if (pick && !checked) { guesses[pick.dataset.row] = pick.dataset.value; return render(); }
       if (e.target.closest("#mainBtn")) {
         if (checked) return goToPair(index + 1);
         const p = pairs[index];
@@ -625,27 +626,27 @@ Sugary soda,Slazená limonáda,🥤,Portion: 330 ml. Sweetened soft drink in a c
         ROWS.forEach(r => guesses[r.key] === p[r.key] ? score++ : mistakes++);
         return render();
       }
-      if (e.target.closest("#closeModal") || e.target.id === "backdrop") {showExplanation = false; return render();}
+      if (e.target.closest("#closeModal") || e.target.id === "backdrop") { showExplanation = false; return render(); }
       if (e.target.closest("#again")) startGame(currentCSV);
     });
 
     document.addEventListener("keydown", e => {          // Esc closes the pop-up
-      if (e.key === "Escape" && showExplanation) {showExplanation = false; render();}
+      if (e.key === "Escape" && showExplanation) { showExplanation = false; render(); }
     });
 
     document.querySelectorAll(".lang button").forEach(b =>
-      b.addEventListener("click", () => {lang = b.dataset.lang; applyLang();}));
+      b.addEventListener("click", () => { lang = b.dataset.lang; applyLang(); }));
 
     /* info popup */
-const $info = document.getElementById("infoBackdrop");
-function toggleInfo(open) {
-  $info.hidden = !open;
-  $info.querySelectorAll("[data-info-lang]").forEach(el => el.hidden = el.dataset.infoLang !== lang);
-}
-document.getElementById("infoBtn").addEventListener("click", () => toggleInfo(true));
-document.getElementById("infoClose").addEventListener("click", () => toggleInfo(false));
-$info.addEventListener("click", e => { if (e.target === $info) toggleInfo(false); });   // click outside
-document.addEventListener("keydown", e => { if (e.key === "Escape") toggleInfo(false); });
+    const $info = document.getElementById("infoBackdrop");
+    function toggleInfo(open) {
+      $info.hidden = !open;
+      $info.querySelectorAll("[data-info-lang]").forEach(el => el.hidden = el.dataset.infoLang !== lang);
+    }
+    document.getElementById("infoBtn").addEventListener("click", () => toggleInfo(true));
+    document.getElementById("infoClose").addEventListener("click", () => toggleInfo(false));
+    $info.addEventListener("click", e => { if (e.target === $info) toggleInfo(false); });   // click outside
+    document.addEventListener("keydown", e => { if (e.key === "Escape") toggleInfo(false); });
 
     startGame(currentCSV);
     applyLang();
